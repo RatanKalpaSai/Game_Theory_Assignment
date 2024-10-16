@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Salsa&display=swap');
+/* frontend/src/index.css */
+html {
+  box-sizing: border-box;
+}
+
+* {
+  font-family: 'Salsa', cursive;
+}
+
+body {
+  margin: 0;
+}
