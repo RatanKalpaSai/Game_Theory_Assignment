@@ -11,12 +11,6 @@ import cors from "cors";
 
 
 dotenv.config();
-const domain1 = process.env.DEV_MODE;
-const domain2 = process.env.PROD_MODE;
-const trustedDomains = [
-	domain1, // Development environment
-	domain2, // Production frontend
-];
 // backend/server.js
 
 connectDB();
@@ -24,20 +18,31 @@ connectDB();
 const port = process.env.PORT || 5000;
 const app = express();
 
+const domain1 = process.env.DEV_MODE;
+const domain2 = process.env.PROD_MODE;
+const trustedDomains = [
+	domain1, // Development environment
+	domain2, // Production frontend
+];
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({
+const Options = {
 	origin: function (requestOrigin, callback) {
 		if (!requestOrigin) return callback(null, true);
 		
-		if (!trustedDomains.includes(requestOrigin)) {
+		if (trustedDomains.indexOf(requestOrigin)===-1) {
 		  const egaAge = `Can't use this : ${requestOrigin}`;
 		  return callback(new Error(egaAge), false);
 		}
 		return callback(null, true);
-	}
-}));
+	},
+	methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+	credentials: true,
+	allowedHeaders: ['Content-Type','Authorization'],
+};
+
+app.use(cors(Options));
 
 app.use("/api/customer", customerRouter);
 app.use("/api/center", centerRouter);
