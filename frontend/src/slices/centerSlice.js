@@ -1,6 +1,7 @@
 import { apiSlice } from "./apiSlice";
-import { CENTER_URL } from "../constants";
+// import { CENTER_URL } from "../constants";
 
+const CENTER_URL = import.meta.env.VITE_API_CENTER_URL;
 // frontend/src/slices/centerSlice.js
 export const centerApiSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({

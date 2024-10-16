@@ -1,6 +1,7 @@
 import { apiSlice } from "./apiSlice";
-import { BOOKING_URL } from "../constants";
+// import { BOOKING_URL } from "../constants";
 
+const BOOKING_URL = import.meta.env.VITE_API_BOOKING_URL;
 // frontend/src/slices/bookingSlice.js
 export const bookingApiSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({

@@ -7,6 +7,7 @@ export default defineConfig({
 	server: {
 		proxy: {
 			"/api": {
+				// target: "https://game-theory-assignment-li8x.onrender.com",
 				target: "http://localhost:5000",
 				changeOrigin: true,
 				secure: false,

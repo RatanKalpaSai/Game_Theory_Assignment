@@ -1,6 +1,7 @@
-import { CUSTOMER_URL } from "../constants";
+// import { CUSTOMER_URL } from "../constants";
 import { apiSlice } from "./apiSlice";
 
+const CUSTOMER_URL = import.meta.env.VITE_API_CUSTOMER_URL;
 // frontend/src/slices/customerSlice.js
 export const customerApiSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
