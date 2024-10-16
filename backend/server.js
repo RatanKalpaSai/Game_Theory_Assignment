@@ -9,8 +9,15 @@ import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
-// backend/server.js
+
 dotenv.config();
+const domain1 = process.env.DEV_MODE;
+const domain2 = process.env.PROD_MODE;
+const trustedDomains = [
+	domain1, // Development environment
+	domain2, // Production frontend
+];
+// backend/server.js
 
 connectDB();
 
@@ -20,7 +27,17 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors());
+app.use(cors({
+	origin: function (requestOrigin, callback) {
+		if (!requestOrigin) return callback(null, true);
+		
+		if (!trustedDomains.includes(requestOrigin)) {
+		  const egaAge = `Can't use this : ${requestOrigin}`;
+		  return callback(new Error(egaAge), false);
+		}
+		return callback(null, true);
+	}
+}));
 
 app.use("/api/customer", customerRouter);
 app.use("/api/center", centerRouter);
