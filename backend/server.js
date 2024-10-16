@@ -27,22 +27,22 @@ const trustedDomains = [
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-const Options = {
-	origin: function (requestOrigin, callback) {
-		if (!requestOrigin) return callback(null, true);
+// const Options = {
+// 	origin: function (requestOrigin, callback) {
+// 		if (!requestOrigin) return callback(null, true);
 		
-		if (trustedDomains.indexOf(requestOrigin)===-1) {
-		  const egaAge = `Can't use this : ${requestOrigin}`;
-		  return callback(new Error(egaAge), false);
-		}
-		return callback(null, true);
-	},
-	methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
-	credentials: true,
-	allowedHeaders: ['Content-Type','Authorization'],
-};
+// 		if (trustedDomains.indexOf(requestOrigin)===-1) {
+// 		  const egaAge = `Can't use this : ${requestOrigin}`;
+// 		  return callback(new Error(egaAge), false);
+// 		}
+// 		return callback(null, true);
+// 	},
+// 	methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+// 	credentials: true,
+// 	allowedHeaders: ['Content-Type','Authorization'],
+// };
 
-app.use(cors(Options));
+// app.use(cors(Options));
 
 app.use("/api/customer", customerRouter);
 app.use("/api/center", centerRouter);
