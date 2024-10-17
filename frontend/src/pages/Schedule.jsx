@@ -16,8 +16,15 @@ import {
 import { useEffect, useState } from "react";
 import { useGetCentersQuery } from "../slices/centerSlice";
 import { useGetUsersQuery } from "../slices/customerSlice";
-import { useAddBookingMutation } from "../slices/bookingSlice";
+import {
+	useAddBookingMutation,
+	useDeleteBookingMutation,
+	useGetBookingsQuery,
+	useUpdateBookingMutation,
+} from "../slices/bookingSlice";
 import { toast } from "react-toastify";
+import Edit from "@mui/icons-material/Edit";
+import Delete from "@mui/icons-material/Delete";
 
 // frontend/src/pages/Schedule.jsx
 const Schedule = () => {
@@ -29,29 +36,98 @@ const Schedule = () => {
 	const [cnt, setCnt] = useState("");
 	const [time, setTime] = useState("");
 
-	const { data: users, isLoading: loadingUsers } = useGetUsersQuery();
-	const { data: centers, isLoading: loadingCenters } = useGetCentersQuery();
+	const [updating, setUpdating] = useState(false);
+	const [updatingBooking, setUpdatingBooking] = useState(null);
+
+	const { data: users } = useGetUsersQuery();
+	const { data: centers } = useGetCentersQuery();
+	const { data: bookings, refetch } = useGetBookingsQuery({
+		date,
+		kind: alignment,
+		center: central,
+	});
+
+	console.log(bookings);
 
 	const [addBooking] = useAddBookingMutation();
+	const [deleteBooking] = useDeleteBookingMutation();
+	const [updateBooking] = useUpdateBookingMutation();
 
 	const handleChange = (event, newAlignment) => {
 		setAlignment(newAlignment);
 	};
 
-	const addHandler = async () => {
+	useEffect(() => {
+		if (!modalOpen) {
+			setUser("");
+			setTime("");
+			setCnt(0);
+			setUpdating(false);
+		}
+	}, [modalOpen]);
+
+	const addHandler = async (flag) => {
 		try {
-			const res = await addBooking({
-				center: central,
-				kind: alignment,
-				date,
-				user,
-				cnt,
-				time,
-			}).unwrap();
-			setModalOpen(false);
-			toast.success(res.message);
+			if (!flag) {
+				const res = await updateBooking({
+					oldCnt: updatingBooking.cnt,
+					oldCenter: updatingBooking.center,
+					oldKind: updatingBooking.kind,
+					oldUser: updatingBooking.user,
+					oldTime: updatingBooking.time,
+					oldDate: updatingBooking.date,
+					center: central,
+					kind: alignment,
+					date,
+					user,
+					cnt,
+					time,
+				}).unwrap();
+				setModalOpen(false);
+				setUpdating(false);
+				setUpdatingBooking(null);
+				toast.success(res.message);
+				setUser("");
+				setTime("");
+				setCnt(0);
+				refetch();
+			} else {
+				const res = await addBooking({
+					center: central,
+					kind: alignment,
+					date,
+					user,
+					cnt,
+					time,
+				}).unwrap();
+				setModalOpen(false);
+				toast.success(res.message);
+				setUser("");
+				setTime("");
+				setCnt(0);
+				refetch();
+			}
 		} catch (error) {
 			toast.error(error?.data?.message || error.message);
+		}
+	};
+
+	const updateBookingHandler = (user) => {
+		setTime(user.time);
+		setUser(user.user);
+		setCnt(user.cnt);
+		setModalOpen(true);
+		setUpdating(true);
+		setUpdatingBooking(user);
+	};
+
+	const deleteBookingHandler = async (user) => {
+		try {
+			const res = await deleteBooking(user).unwrap();
+			toast.success(res.message);
+			refetch();
+		} catch (error) {
+			toast.error(error?.data?.message || error?.message);
 		}
 	};
 
@@ -96,7 +172,7 @@ const Schedule = () => {
 					/>
 					<FormControl sx={{ width: "200px" }}>
 						<InputLabel id="demo-simple-select-label">
-							Center
+							Choose
 						</InputLabel>
 						<Select
 							labelId="demo-simple-select-label"
@@ -259,15 +335,32 @@ const Schedule = () => {
 										</MenuItem>
 									))}
 								</Select>
-								<Button
-									variant="contained"
-									onClick={() => addHandler()}
-									disabled={
-										user == "" || cnt == "" || time == ""
-									}
-								>
-									Add
-								</Button>
+								{updating ? (
+									<Button
+										variant="contained"
+										onClick={() => addHandler(false)}
+										disabled={
+											user == "" ||
+											cnt == "" ||
+											time == ""
+										}
+										color="warning"
+									>
+										Modify
+									</Button>
+								) : (
+									<Button
+										variant="contained"
+										onClick={() => addHandler(true)}
+										disabled={
+											user == "" ||
+											cnt == "" ||
+											time == ""
+										}
+									>
+										Add
+									</Button>
+								)}
 							</Box>
 						</Box>
 					</Modal>
@@ -289,24 +382,28 @@ const Schedule = () => {
 						fontWeight: "bold",
 					}}
 				>
-					<Box width="25%" textAlign="center"></Box>
-					<Box width="100%" textAlign="center">
-						Court 1
-					</Box>
-					<Box width="100%" textAlign="center">
-						Court 2
-					</Box>
-					<Box width="100%" textAlign="center">
-						Court 3
-					</Box>
-					<Box width="100%" textAlign="center">
-						Court 4
-					</Box>
-					<Box width="100%" textAlign="center">
-						Court 5
-					</Box>
+					<Box minWidth="70px" maxWidth="70px"></Box>
+					{centers &&
+						centers.length > 0 &&
+						centers
+							.filter(
+								(item) =>
+									item.name === central &&
+									item.kind === alignment
+							)
+							.map((center) =>
+								Array.from({ length: center.cnt }, (_, i) => (
+									<Box
+										key={`${center.id}-${i}`}
+										value={"Court " + (i + 1)}
+										sx={{ flex: 1 }}
+									>
+										Court {i + 1}{" "}
+									</Box>
+								))
+							)}
 				</Box>
-				{[1, 2, 3, 4, 5, 6].map((_, idx) => (
+				{[7, 8, 9, 10, 11, 12].map((t) => (
 					<Box
 						sx={{
 							display: "flex",
@@ -315,61 +412,143 @@ const Schedule = () => {
 							marginBottom: 2,
 							height: "80px",
 						}}
-						key={idx}
+						key={t}
 					>
 						<Box minWidth="70px" maxWidth="70px">
-							{7 + idx}.00 AM
+							{t}.00 AM
 						</Box>
-						<Box
-							width="100%"
-							bgcolor="transparent"
-							borderRadius={2}
-							boxShadow={"3px 3px 6px 6px #1976d220"}
-							padding={1}
-							border={"1px solid lightgray"}
-						>
-							Item {idx}
-						</Box>
-						<Box
-							width="100%"
-							bgcolor="transparent"
-							borderRadius={2}
-							boxShadow={"3px 3px 6px 6px #1976d220"}
-							padding={1}
-							border={"1px solid lightgray"}
-						>
-							Item {idx}
-						</Box>
-						<Box
-							width="100%"
-							bgcolor="transparent"
-							borderRadius={2}
-							boxShadow={"3px 3px 6px 6px #1976d220"}
-							padding={1}
-							border={"1px solid lightgray"}
-						>
-							Item {idx}
-						</Box>
-						<Box
-							width="100%"
-							bgcolor="transparent"
-							borderRadius={2}
-							boxShadow={"3px 3px 6px 6px #1976d220"}
-							padding={1}
-							border={"1px solid lightgray"}
-						>
-							Item {idx}
-						</Box>
-						<Box
-							width="100%"
-							bgcolor="transparent"
-							borderRadius={2}
-							boxShadow={"3px 3px 6px 6px #1976d220"}
-							padding={1}
-							border={"1px solid lightgray"}
-						>
-							Item {idx}
-						</Box>
+						{centers &&
+							centers.length > 0 &&
+							centers
+								.filter(
+									(item) =>
+										item.name === central &&
+										item.kind === alignment
+								)
+								.map((center) =>
+									Array.from(
+										{ length: center.cnt },
+										(_, i) => (
+											<Box
+												key={`${center.id}-${i}`}
+												sx={{ flex: 1 }}
+												width="100%"
+												bgcolor={
+													bookings &&
+													bookings.find(
+														(item) =>
+															item.time.split(
+																" "
+															)[0] == t &&
+															item.cnt.charAt(
+																item.cnt
+																	.length - 1
+															) ==
+																i + 1
+													)
+														? "lightcyan"
+														: "transparent"
+												}
+												borderRadius={2}
+												boxShadow={
+													"3px 3px 6px 6px #1976d220"
+												}
+												display="flex"
+												alignItems="center"
+												justifyContent="center"
+												border={"1px solid lightgray"}
+											>
+												{bookings &&
+													bookings.find(
+														(item) =>
+															item.time.split(
+																" "
+															)[0] == t &&
+															item.cnt.charAt(
+																item.cnt
+																	.length - 1
+															) ==
+																i + 1
+													) && (
+														<>
+															<Button
+																color="success"
+																sx={{ ml: 2 }}
+																onClick={() =>
+																	updateBookingHandler(
+																		bookings.find(
+																			(
+																				item
+																			) =>
+																				item.time.split(
+																					" "
+																				)[0] ==
+																					t &&
+																				item.cnt.charAt(
+																					item
+																						.cnt
+																						.length -
+																						1
+																				) ==
+																					i +
+																						1
+																		)
+																	)
+																}
+															>
+																<Edit />
+															</Button>
+															{
+																bookings.find(
+																	(item) =>
+																		item.time.split(
+																			" "
+																		)[0] ==
+																			t &&
+																		item.cnt.charAt(
+																			item
+																				.cnt
+																				.length -
+																				1
+																		) ==
+																			i +
+																				1
+																).user
+															}
+
+															<Button
+																color="warning"
+																sx={{ ml: 2 }}
+																onClick={() =>
+																	deleteBookingHandler(
+																		bookings.find(
+																			(
+																				item
+																			) =>
+																				item.time.split(
+																					" "
+																				)[0] ==
+																					t &&
+																				item.cnt.charAt(
+																					item
+																						.cnt
+																						.length -
+																						1
+																				) ==
+																					i +
+																						1
+																		)
+																	)
+																}
+															>
+																<Delete />
+															</Button>
+														</>
+													)}
+											</Box>
+										)
+									)
+								)}
 					</Box>
 				))}
 			</Card>

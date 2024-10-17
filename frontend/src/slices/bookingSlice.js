@@ -2,6 +2,7 @@ import { apiSlice } from "./apiSlice";
 // import { BOOKING_URL } from "../constants";
 
 const BOOKING_URL = import.meta.env.VITE_API_BOOKING_URL;
+// console.log(BOOKING_URL,"lplp");
 // frontend/src/slices/bookingSlice.js
 export const bookingApiSlice = apiSlice.injectEndpoints({
 	endpoints: (builder) => ({
@@ -13,13 +14,13 @@ export const bookingApiSlice = apiSlice.injectEndpoints({
 			}),
 		}),
 		getBookings: builder.query({
-			query: ({ date, time, center }) => ({
+			query: ({ date, kind, center }) => ({
 				url:
 					BOOKING_URL +
 					"?date=" +
 					date +
-					"&time=" +
-					time +
+					"&kind=" +
+					kind +
 					"&center=" +
 					center,
 			}),
@@ -33,7 +34,7 @@ export const bookingApiSlice = apiSlice.injectEndpoints({
 				body: data,
 			}),
 		}),
-		updateBooking: builder.query({
+		updateBooking: builder.mutation({
 			query: (data) => ({
 				url: BOOKING_URL,
 				method: "put",
@@ -46,6 +47,6 @@ export const bookingApiSlice = apiSlice.injectEndpoints({
 export const {
 	useGetBookingsQuery,
 	useAddBookingMutation,
-	useUpdateBookingQuery,
+	useUpdateBookingMutation,
 	useDeleteBookingMutation,
 } = bookingApiSlice;
