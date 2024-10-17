@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
 import connectDB from "./config/db.js";
-
 import customerRouter from "./routes/customerRouter.js";
 import centerRouter from "./routes/centerRouter.js";
 import bookingRouter from "./routes/bookingRouter.js";
@@ -43,6 +42,12 @@ app.use(cookieParser());
 // };
 
 // app.use(cors(Options));
+app.use(cors({
+	origin: '*',
+	methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','OPTIONS'],
+	credentials: true,
+	allowedHeaders: ['Content-Type','Authorization'],
+}));
 
 app.use("/api/customer", customerRouter);
 app.use("/api/center", centerRouter);
