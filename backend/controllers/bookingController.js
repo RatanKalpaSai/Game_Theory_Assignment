@@ -6,13 +6,13 @@ import Booking from "../models/bookingModel.js";
 // backend/controllers/bookingController.js
 export const getBookings = asyncHandler(async (req, res) => {
 	const { center, kind, date } = req.query;
-	const bookings = Booking.find({ center, kind, date });
+	const bookings = await Booking.find({ center, kind, date });
 	res.status(200).json(bookings);
 });
 
 export const addBooking = asyncHandler(async (req, res) => {
 	const { user, center, kind, cnt, date, time } = req.body;
-	const existBooking = Booking.findOne({ center, kind, cnt, date, time });
+	const existBooking = await Booking.findOne({ center, kind, cnt, date, time });
 	if (existBooking) {
 		res.status(401);
 		throw new Error("Already booked!");
@@ -34,7 +34,7 @@ export const addBooking = asyncHandler(async (req, res) => {
 
 export const deleteBooking = asyncHandler(async (req, res) => {
 	const { center, kind, cnt, date, time } = req.body;
-	const existBooking = Booking.findOne({ center, kind, cnt, date, time });
+	const existBooking = await Booking.findOne({ center, kind, cnt, date, time });
 	if (existBooking) {
 		await Booking.deleteOne({ center, kind, cnt, date, time });
 		res.status(200).json({
@@ -61,7 +61,7 @@ export const updateBooking = asyncHandler(async (req, res) => {
 		oldTime,
 		oldCnt,
 	} = req.body;
-	const existBooking = Booking.findOne({
+	const existBooking = await Booking.findOne({
 		center: oldCenter,
 		kind: oldKind,
 		cnt: oldCnt,
