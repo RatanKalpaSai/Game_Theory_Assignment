@@ -16,19 +16,43 @@ import {
 import { useEffect, useState } from "react";
 import { useGetCentersQuery } from "../slices/centerSlice";
 import { useGetUsersQuery } from "../slices/customerSlice";
+import { useAddBookingMutation } from "../slices/bookingSlice";
+import { toast } from "react-toastify";
 
 // frontend/src/pages/Schedule.jsx
 const Schedule = () => {
 	const [central, setCentral] = useState("");
-	const [alignment, setAlignment] = useState("swimming");
+	const [alignment, setAlignment] = useState("");
 	const [modalOpen, setModalOpen] = useState(false);
 	const [date, setDate] = useState("17:10:2024");
+	const [user, setUser] = useState("");
+	const [cnt, setCnt] = useState("");
+	const [time, setTime] = useState("");
 
 	const { data: users, isLoading: loadingUsers } = useGetUsersQuery();
 	const { data: centers, isLoading: loadingCenters } = useGetCentersQuery();
 
+	const [addBooking] = useAddBookingMutation();
+
 	const handleChange = (event, newAlignment) => {
 		setAlignment(newAlignment);
+	};
+
+	const addHandler = async () => {
+		try {
+			const res = await addBooking({
+				center: central,
+				kind: alignment,
+				date,
+				user,
+				cnt,
+				time,
+			}).unwrap();
+			setModalOpen(false);
+			toast.success(res.message);
+		} catch (error) {
+			toast.error(error?.data?.message || error.message);
+		}
 	};
 
 	return (
@@ -48,7 +72,6 @@ const Schedule = () => {
 					value={alignment}
 					exclusive
 					onChange={handleChange}
-					aria-label="Platform"
 				>
 					{centers &&
 						centers.length > 0 &&
@@ -62,8 +85,6 @@ const Schedule = () => {
 									{court.kind}
 								</ToggleButton>
 							))}
-					{/* <ToggleButton value="swimming">Swimming</ToggleButton>
-					<ToggleButton value="badminton">Badminton</ToggleButton> */}
 				</ToggleButtonGroup>
 				<Box sx={{ display: "flex", paddingRight: 5, gap: 3 }}>
 					<TextField
@@ -100,15 +121,11 @@ const Schedule = () => {
 					<Button
 						variant="contained"
 						onClick={() => setModalOpen(true)}
+						disabled={central == "" || alignment == ""}
 					>
 						Add Booking
 					</Button>
-					<Modal
-						open={modalOpen}
-						onClose={() => setModalOpen(false)}
-						aria-labelledby="modal-modal-title"
-						aria-describedby="modal-modal-description"
-					>
+					<Modal open={modalOpen} onClose={() => setModalOpen(false)}>
 						<Box
 							sx={{
 								position: "absolute",
@@ -121,6 +138,7 @@ const Schedule = () => {
 								boxShadow: 3,
 								borderRadius: 2,
 								p: 4,
+								color: "black",
 							}}
 						>
 							<Typography
@@ -136,50 +154,120 @@ const Schedule = () => {
 								display="flex"
 								gap={3}
 								justifyContent="space-between"
+								alignItems="center"
 								mt={3}
 							>
+								<InputLabel
+									sx={{ color: "black" }}
+									id="select-label"
+								>
+									Name :
+								</InputLabel>
 								<Select
 									sx={{ flex: 1 }}
-									value={central}
-									label="Center"
-									onChange={(e) => setCentral(e.target.value)}
+									value={user}
+									labelId="select-label"
+									onChange={(e) => setUser(e.target.value)}
 								>
-									{centers &&
-										centers.length > 0 &&
-										[
-											...new Set(
-												centers.map((item) => item.name)
-											),
-										].map((center) => (
+									{users &&
+										users.length > 0 &&
+										users.map((user) => (
 											<MenuItem
-												key={center}
-												value={center}
+												key={user.name + user.age}
+												value={user.name}
 											>
-												{center}
+												{user.name}
 											</MenuItem>
 										))}
 								</Select>
+							</Box>
+							<Box
+								display="flex"
+								gap={3}
+								justifyContent="space-between"
+								alignItems="center"
+								mt={3}
+							>
+								<InputLabel
+									sx={{ color: "black" }}
+									id="select-label"
+								>
+									Court :
+								</InputLabel>
 								<Select
 									sx={{ flex: 1 }}
-									value={central}
-									label="Court"
-									onChange={(e) => setCentral(e.target.value)}
+									value={cnt}
+									labelId="select-label"
+									onChange={(e) => setCnt(e.target.value)}
 								>
 									{centers &&
 										centers.length > 0 &&
 										centers
 											.filter(
-												(item) => item.name === central
+												(item) =>
+													item.name === central &&
+													item.kind === alignment
 											)
-											.map((court) => (
-												<MenuItem
-													key={court.kind}
-													value={court.kind}
-												>
-													{court.kind}
-												</MenuItem>
-											))}
+											.map((center) =>
+												Array.from(
+													{ length: center.cnt },
+													(_, i) => (
+														<MenuItem
+															key={`${center.id}-${i}`}
+															value={
+																"Court " +
+																(i + 1)
+															}
+														>
+															Court {i + 1}{" "}
+														</MenuItem>
+													)
+												)
+											)}
 								</Select>
+							</Box>
+							<Box
+								display="flex"
+								gap={3}
+								justifyContent="space-between"
+								alignItems="center"
+								mt={3}
+							>
+								<InputLabel
+									sx={{ color: "black" }}
+									id="time-select-label"
+								>
+									Time : &nbsp;
+								</InputLabel>
+
+								<Select
+									sx={{ flex: 1 }}
+									value={time}
+									labelId="time-select-label"
+									onChange={(e) => setTime(e.target.value)}
+								>
+									{[
+										"7 - 8",
+										"8 - 9",
+										"9 - 10",
+										"10 - 11",
+										"11 - 12",
+										"12 - 1",
+									].map((time) => (
+										<MenuItem key={time} value={time}>
+											{time}
+										</MenuItem>
+									))}
+								</Select>
+								<Button
+									variant="contained"
+									onClick={() => addHandler()}
+									disabled={
+										user == "" || cnt == "" || time == ""
+									}
+								>
+									Add
+								</Button>
 							</Box>
 						</Box>
 					</Modal>
