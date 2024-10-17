@@ -54,7 +54,7 @@ The backend is implemented using Node.js with Express and MongoDB as the databas
     - Deploy the service.
 
 4. Backend URL:  
-   `[https://sportify-m8gu.onrender.com](https://game-theory-assignment-li8x.onrender.com)`
+  ` https://game-theory-assignment-li8x.onrender.com`
 
 ---
 
